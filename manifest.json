@@ -1,5 +1,5 @@
 {
-  "name": "Figma Variable Styler",
+  "name": "Swap Styles to Variables",
   "id": "com.yourname.variablestyler",
   "api": "1.0.0",
   "main": "code.js",

@@ -1,64 +1,181 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Figma Variable Styler</title>
+    <meta charset="utf-8" />
+    <title>Swap Style to Variable</title>
+    <!-- Основные стили страницы -->
     <style>
-        select { width: 100%; margin-bottom: 10px; }
+        /* Базовые стили для body */
+        body {
+            font-family: 'Roboto', sans-serif;
+            background-color: #EDEDED;
+            color: #2A2A2A;
+            padding: 16px;
+        }
+
+        /* Стили для заголовка */
+        h2 {
+            font-size: 20px;
+            margin-bottom: 20px;
+            margin-top: 0;
+        }
+
+        /* Стили для списка стилей и переменных */
+        #stylesList {
+            margin-bottom: 24px;
+        }
+
+        /* Стили для строки стилей */
+        .style-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+
+        /* Стили для выпадающего списка */
+        select {
+            padding: 8px 12px;
+            background-color: #FFFFFF;
+            border: 1px solid #D9D9D9;
+            border-radius: 4px;
+            color: #2A2A2A;
+            appearance: none;
+            width: 200px;
+            cursor: pointer;
+            transition: border-color 0.3s ease;
+        }
+
+        /* Стили для кнопки */
+        button {
+            padding: 8px 16px;
+            background-color: #1890FF;
+            border: none;
+            border-radius: 4px;
+            color: #FFFFFF;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+            box-shadow: 0 2px 3px rgba(0, 0, 0, 0.1);
+        }
+
+        /* Стили для кнопки применения стилей */
+        button[onclick="applyStyles()"] {
+            position: fixed;
+            bottom: 0;
+            right: 0;
+            margin: 10px;
+            z-index: 1000;
+        }
     </style>
 </head>
+
 <body>
-<div id="app"></div>
-<button id="apply">Применить</button>
-<script>
-let allStyles = [];
-let allVariables = [];
+    <!-- Заголовки для стилей и переменных -->
+    <div class="style-row">
+        <h2>STYLES</h2>
+        <h2>VARIABLES</h2>
+    </div>
+    <!-- Место для вывода списка стилей и переменных -->
+    <div id="stylesList"></div>
+    <!-- Кнопка для применения выбранных стилей -->
+    <button onclick="applyStyles()">Apply</button>
 
-document.getElementById('apply').addEventListener('click', () => {
-    const selections = [];
-    document.querySelectorAll('select').forEach((select, index) => {
-        selections.push({
-            styleId: allStyles[index].id,
-            styleType: allStyles[index].type,
-            variableName: select.value
+    <script>
+        let stylesToApply = [];
+
+        const selectOptions = (selectedStyle, allVariables) => {
+            return allVariables
+                .filter(variable => variable.name)
+                .map(variable => {
+                    if (variable.name === selectedStyle) {
+                        return `<option value="${variable.id}" selected>${variable.name}</option>`;
+                    } else {
+                        return `<option value="${variable.id}">${variable.name}</option>`;
+                    }
+                }).join('');
+        };
+
+        function applyStyles() {
+            const styleElements = document.querySelectorAll('.style-select');
+            const stylesToApply = [];
+
+            styleElements.forEach(el => {
+                const nodeId = el.getAttribute('data-nodeid');
+                const styleType = el.getAttribute('data-styletype');
+                const variableId = el.value;
+                stylesToApply.push({ id: nodeId, type: styleType, selectedVariable: variableId });
+            });
+
+            console.log("Styles to Apply:", stylesToApply);    
+            parent.postMessage({ pluginMessage: { type: 'apply-styles', stylesToApply } }, '*');
+        }
+
+        // function applyStyles() {
+        //     const styleElements = document.querySelectorAll('.style-select');
+        //     const variablesToApply = [];
+
+        //     styleElements.forEach(el => {
+        //         const variableId = el.value;
+        //         variablesToApply.push(variableId);
+        //     });
+
+        //     console.log("Variables to Apply:", variablesToApply);    
+        //     parent.postMessage({ pluginMessage: { type: 'apply-variables', variablesToApply } }, '*');
+        // }
+
+        // function applyStyles() {
+        //     const styleElements = document.querySelectorAll('.style-select');
+        //     const stylesToApply = [];
+
+        //     styleElements.forEach(el => {
+        //         const nodeId = el.getAttribute('data-nodeid');
+        //         const styleType = el.getAttribute('data-styletype');
+        //         const variableId = el.value;
+        //         stylesToApply.push({ id: nodeId, type: styleType, selectedVariable: variableId });
+        //     });
+
+        //     console.log("Styles to Apply:", stylesToApply);    
+        //     parent.postMessage({ pluginMessage: { type: 'apply-styles', stylesToApply } }, '*');
+        // }
+
+        window.applyStyles = applyStyles;
+
+        window.addEventListener('message', event => {
+            const msg = event.data.pluginMessage;
+            if (msg.type === 'send-styles') {
+                const styles = msg.styles;
+                const variables = msg.variables;
+                const fills = styles.filter(style => style.type === 'fill');
+                const strokes = styles.filter(style => style.type === 'stroke');
+
+                const appendStylesToDOM = (styleGroup, label) => {
+                    const header = document.createElement('h3');
+                    header.innerText = label;
+                    document.getElementById('stylesList').appendChild(header);
+
+                    styleGroup.forEach(style => {
+                        const div = document.createElement('div');
+                        div.classList.add('style-row');
+                        div.innerHTML = `
+                        <a href="#" class="style-link" data-nodeid="${style.id}" onclick="focusOnNode('${style.id}')">${style.name}</a>
+                        <select class="style-select" data-nodeid="${style.id}" data-styletype="${style.type}">
+                            ${selectOptions(style.name, variables)}
+                        </select>
+                        `;
+                        document.getElementById('stylesList').appendChild(div);
+                    });
+                };
+
+                appendStylesToDOM(fills, 'Fill Styles');
+                appendStylesToDOM(strokes, 'Stroke Styles');
+            }
         });
-    });
+        function focusOnNode(nodeId) {
+            event.preventDefault(); // Предотвратите стандартное действие гиперссылки
+            parent.postMessage({ pluginMessage: { type: 'focus-node', nodeId: nodeId } }, '*');
+        }
+    </script>
 
-    window.parent.postMessage({ pluginMessage: { type: 'apply-styles', selections: selections } }, '*');
-});
-window.onmessage = (event) => {
-    const { type, styles, variables } = event.data.pluginMessage;
-
-    if (type === 'init') {
-        allStyles = styles;
-        allVariables = variables;
-        renderStyles();
-    }
-};
-
-function renderStyles() {
-    const app = document.getElementById('app');
-    app.innerHTML = ''; // Clear previous content
-
-    allStyles.forEach(style => {
-        const div = document.createElement('div');
-        const label = document.createElement('label');
-        label.textContent = `${style.type}: ${style.styleName}`;
-        
-        const select = document.createElement('select');
-        allVariables.forEach(variable => {
-            const option = document.createElement('option');
-            option.value = variable;
-            option.textContent = variable;
-            select.appendChild(option);
-        });
-
-        div.appendChild(label);
-        div.appendChild(select);
-        app.appendChild(div);
-    });
-}
-</script>
 </body>
 </html>
