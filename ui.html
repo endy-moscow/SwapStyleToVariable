@@ -1,181 +1,180 @@
 <!DOCTYPE html>
 <html lang="en">
-
-<head>
+  <head>
     <meta charset="utf-8" />
     <title>Swap Style to Variable</title>
-    <!-- Основные стили страницы -->
     <style>
-        /* Базовые стили для body */
-        body {
-            font-family: 'Roboto', sans-serif;
-            background-color: #EDEDED;
-            color: #2A2A2A;
-            padding: 16px;
-        }
+      body {
+        font-family: "Roboto", sans-serif;
+        background-color: #ededed;
+        color: #2a2a2a;
+        padding: 16px;
+      }
 
-        /* Стили для заголовка */
-        h2 {
-            font-size: 20px;
-            margin-bottom: 20px;
-            margin-top: 0;
-        }
+      h2 {
+        font-size: 20px;
+        margin-bottom: 20px;
+        margin-top: 0;
+      }
 
-        /* Стили для списка стилей и переменных */
-        #stylesList {
-            margin-bottom: 24px;
-        }
+      #stylesList {
+        margin-bottom: 24px;
+      }
 
-        /* Стили для строки стилей */
-        .style-row {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 12px;
-        }
+      .style-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 12px;
+      }
 
-        /* Стили для выпадающего списка */
-        select {
-            padding: 8px 12px;
-            background-color: #FFFFFF;
-            border: 1px solid #D9D9D9;
-            border-radius: 4px;
-            color: #2A2A2A;
-            appearance: none;
-            width: 200px;
-            cursor: pointer;
-            transition: border-color 0.3s ease;
-        }
+      select {
+        padding: 8px 12px;
+        background-color: #ffffff;
+        border: 1px solid #d9d9d9;
+        border-radius: 4px;
+        color: #2a2a2a;
+        appearance: none;
+        width: 200px;
+        cursor: pointer;
+        transition: border-color 0.3s ease;
+      }
 
-        /* Стили для кнопки */
-        button {
-            padding: 8px 16px;
-            background-color: #1890FF;
-            border: none;
-            border-radius: 4px;
-            color: #FFFFFF;
-            cursor: pointer;
-            transition: background-color 0.3s ease;
-            box-shadow: 0 2px 3px rgba(0, 0, 0, 0.1);
-        }
+      button {
+        padding: 8px 16px;
+        background-color: #1890ff;
+        border: none;
+        border-radius: 4px;
+        color: #ffffff;
+        cursor: pointer;
+        transition: background-color 0.3s ease;
+        box-shadow: 0 2px 3px rgba(0, 0, 0, 0.1);
+      }
 
-        /* Стили для кнопки применения стилей */
-        button[onclick="applyStyles()"] {
-            position: fixed;
-            bottom: 0;
-            right: 0;
-            margin: 10px;
-            z-index: 1000;
-        }
+      button[onclick="applyStyles()"] {
+        position: fixed;
+        bottom: 0;
+        right: 0;
+        margin: 10px;
+        z-index: 1000;
+      }
     </style>
-</head>
+  </head>
 
-<body>
-    <!-- Заголовки для стилей и переменных -->
+  <body>
     <div class="style-row">
-        <h2>STYLES</h2>
-        <h2>VARIABLES</h2>
+      <h2>STYLES</h2>
+      <h2>VARIABLES</h2>
     </div>
-    <!-- Место для вывода списка стилей и переменных -->
     <div id="stylesList"></div>
-    <!-- Кнопка для применения выбранных стилей -->
     <button onclick="applyStyles()">Apply</button>
 
     <script>
-        let stylesToApply = [];
+        function appendStylesToDOM(styles, title) {
+            const container = document.getElementById("stylesList");
+            const heading = document.createElement("h2");
+            heading.innerText = title;
+            container.appendChild(heading);
 
-        const selectOptions = (selectedStyle, allVariables) => {
-            return allVariables
-                .filter(variable => variable.name)
-                .map(variable => {
-                    if (variable.name === selectedStyle) {
-                        return `<option value="${variable.id}" selected>${variable.name}</option>`;
-                    } else {
-                        return `<option value="${variable.id}">${variable.name}</option>`;
-                    }
-                }).join('');
-        };
+            styles.forEach((style) => {
+                const row = document.createElement("div");
+                row.className = "style-row";
 
-        function applyStyles() {
-            const styleElements = document.querySelectorAll('.style-select');
-            const stylesToApply = [];
+                const styleName = document.createElement("span");
+                styleName.innerText = style.name;
+                styleName.title = "Click to focus on node";
+                styleName.style.cursor = "pointer";
+                styleName.addEventListener("click", () => focusOnNode(style.id));
 
-            styleElements.forEach(el => {
-                const nodeId = el.getAttribute('data-nodeid');
-                const styleType = el.getAttribute('data-styletype');
-                const variableId = el.value;
-                stylesToApply.push({ id: nodeId, type: styleType, selectedVariable: variableId });
+                const select = generateSelectOptions(style, window.variables);
+
+                row.appendChild(styleName);
+
+                // Конвертирование строки в DOM элемент
+                const domParser = new DOMParser();
+                const selectDoc = domParser.parseFromString(select, 'text/html');
+                row.appendChild(selectDoc.body.firstChild);
+
+                container.appendChild(row);
             });
-
-            console.log("Styles to Apply:", stylesToApply);    
-            parent.postMessage({ pluginMessage: { type: 'apply-styles', stylesToApply } }, '*');
-        }
-
-        // function applyStyles() {
-        //     const styleElements = document.querySelectorAll('.style-select');
-        //     const variablesToApply = [];
-
-        //     styleElements.forEach(el => {
-        //         const variableId = el.value;
-        //         variablesToApply.push(variableId);
-        //     });
-
-        //     console.log("Variables to Apply:", variablesToApply);    
-        //     parent.postMessage({ pluginMessage: { type: 'apply-variables', variablesToApply } }, '*');
-        // }
-
-        // function applyStyles() {
-        //     const styleElements = document.querySelectorAll('.style-select');
-        //     const stylesToApply = [];
-
-        //     styleElements.forEach(el => {
-        //         const nodeId = el.getAttribute('data-nodeid');
-        //         const styleType = el.getAttribute('data-styletype');
-        //         const variableId = el.value;
-        //         stylesToApply.push({ id: nodeId, type: styleType, selectedVariable: variableId });
-        //     });
-
-        //     console.log("Styles to Apply:", stylesToApply);    
-        //     parent.postMessage({ pluginMessage: { type: 'apply-styles', stylesToApply } }, '*');
-        // }
-
-        window.applyStyles = applyStyles;
-
-        window.addEventListener('message', event => {
+            }
+        window.addEventListener("message", (event) => {
             const msg = event.data.pluginMessage;
-            if (msg.type === 'send-styles') {
+
+            if (msg.type === "apply-styles") {
+                const stylesToApply = msg.stylesToApply;
+                stylesToApply.forEach((styleToApply) => {
+                const node = figma.getNodeById(styleToApply.id);
+                if (node) {
+                    const variable = figma.variables.getVariableById(
+                    styleToApply.selectedVariable
+                    );
+                    if (variable) {
+                    applyStyleToNode(node, styleToApply.type, variable);
+                    }
+                }
+                });
+            } else if (msg.type === "send-styles" && msg.styles && msg.variables) {
+                document.getElementById("stylesList").innerHTML = ""; // Очищаем список перед добавлением новых стилей
                 const styles = msg.styles;
                 const variables = msg.variables;
-                const fills = styles.filter(style => style.type === 'fill');
-                const strokes = styles.filter(style => style.type === 'stroke');
+                window.variables = variables;
 
-                const appendStylesToDOM = (styleGroup, label) => {
-                    const header = document.createElement('h3');
-                    header.innerText = label;
-                    document.getElementById('stylesList').appendChild(header);
+                const fills = styles.filter((style) => style.type === "fill");
+                const strokes = styles.filter((style) => style.type === "stroke");
 
-                    styleGroup.forEach(style => {
-                        const div = document.createElement('div');
-                        div.classList.add('style-row');
-                        div.innerHTML = `
-                        <a href="#" class="style-link" data-nodeid="${style.id}" onclick="focusOnNode('${style.id}')">${style.name}</a>
-                        <select class="style-select" data-nodeid="${style.id}" data-styletype="${style.type}">
-                            ${selectOptions(style.name, variables)}
-                        </select>
-                        `;
-                        document.getElementById('stylesList').appendChild(div);
-                    });
-                };
+                if (fills.length === 0 && strokes.length === 0) {
+                const message = document.createElement("p");
+                message.innerText = "No styles found for the selected item.";
+                document.getElementById("stylesList").appendChild(message);
+                return;
+                }
 
-                appendStylesToDOM(fills, 'Fill Styles');
-                appendStylesToDOM(strokes, 'Stroke Styles');
+                appendStylesToDOM(fills, "Fill Styles");
+                appendStylesToDOM(strokes, "Stroke Styles");
             }
         });
-        function focusOnNode(nodeId) {
-            event.preventDefault(); // Предотвратите стандартное действие гиперссылки
-            parent.postMessage({ pluginMessage: { type: 'focus-node', nodeId: nodeId } }, '*');
-        }
-    </script>
 
-</body>
+        
+        function generateSelectOptions(style, allVariables) {
+            let matchedVariable = allVariables.find(variable => variable.name === style.name);
+            let options = allVariables
+                .map(variable => {
+                    let isSelected = matchedVariable && variable.id === matchedVariable.id ? 'selected' : '';
+                    return `<option value="${variable.id}" ${isSelected}>${variable.name}</option>`;
+                })
+                .join('');
+
+            return `<select class="variable-select" data-nodeid="${style.id}" data-styletype="${style.type}">${options}</select>`;
+        }
+
+
+
+
+
+        function applyStyles() {
+            const variableSelects = document.querySelectorAll('.variable-select');
+            const stylesToApply = [];
+
+            variableSelects.forEach(el => {
+                const nodeId = el.getAttribute('data-nodeid');
+                const styleType = el.getAttribute('data-styletype');  // Получение типа стиля
+                const variableId = el.value;
+
+                stylesToApply.push({ id: nodeId, type: styleType, selectedVariable: variableId });  // Передача типа стиля
+            });
+
+            console.log("Sending styles to apply:", stylesToApply);
+            parent.postMessage({ pluginMessage: { type: 'apply-styles', stylesToApply: stylesToApply } }, '*');
+        }
+
+      function focusOnNode(nodeId) {
+        event.preventDefault();
+        parent.postMessage(
+          { pluginMessage: { type: "focus-node", nodeId: nodeId } },
+          "*"
+        );
+      }
+    </script>
+  </body>
 </html>
