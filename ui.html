@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Figma Variable Styler</title>
+    <style>
+        select { width: 100%; margin-bottom: 10px; }
+    </style>
+</head>
+<body>
+<div id="app"></div>
+<button id="apply">Применить</button>
+<script>
+let allStyles = [];
+let allVariables = [];
+
+document.getElementById('apply').addEventListener('click', () => {
+    const selections = [];
+    document.querySelectorAll('select').forEach((select, index) => {
+        selections.push({
+            styleId: allStyles[index].id,
+            styleType: allStyles[index].type,
+            variableName: select.value
+        });
+    });
+
+    window.parent.postMessage({ pluginMessage: { type: 'apply-styles', selections: selections } }, '*');
+});
+window.onmessage = (event) => {
+    const { type, styles, variables } = event.data.pluginMessage;
+
+    if (type === 'init') {
+        allStyles = styles;
+        allVariables = variables;
+        renderStyles();
+    }
+};
+
+function renderStyles() {
+    const app = document.getElementById('app');
+    app.innerHTML = ''; // Clear previous content
+
+    allStyles.forEach(style => {
+        const div = document.createElement('div');
+        const label = document.createElement('label');
+        label.textContent = `${style.type}: ${style.styleName}`;
+        
+        const select = document.createElement('select');
+        allVariables.forEach(variable => {
+            const option = document.createElement('option');
+            option.value = variable;
+            option.textContent = variable;
+            select.appendChild(option);
+        });
+
+        div.appendChild(label);
+        div.appendChild(select);
+        app.appendChild(div);
+    });
+}
+</script>
+</body>
+</html>
