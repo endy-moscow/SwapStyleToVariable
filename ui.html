@@ -137,7 +137,12 @@
 
         
         function generateSelectOptions(style, allVariables) {
-            let matchedVariable = allVariables.find(variable => variable.name === style.name);
+            let matchedVariable = allVariables.find(variable => {
+                let variableNameParts = variable.name.split('/');
+                let variableSimpleName = variableNameParts[variableNameParts.length - 1];
+                return variableSimpleName === style.name;
+            });
+
             let options = allVariables
                 .map(variable => {
                     let isSelected = matchedVariable && variable.id === matchedVariable.id ? 'selected' : '';
@@ -147,6 +152,7 @@
 
             return `<select class="variable-select" data-nodeid="${style.id}" data-styletype="${style.type}">${options}</select>`;
         }
+
 
 
 
