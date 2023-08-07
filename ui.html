@@ -58,6 +58,7 @@
         margin: 10px;
         z-index: 1000;
       }
+      
     </style>
   </head>
 
@@ -137,11 +138,18 @@
 
         
         function generateSelectOptions(style, allVariables) {
-            let matchedVariable = allVariables.find(variable => {
-                let variableNameParts = variable.name.split('/');
-                let variableSimpleName = variableNameParts[variableNameParts.length - 1];
-                return variableSimpleName === style.name;
-            });
+            // Сначала ищем переменную без разделителя "/", которая соответствует имени стиля.
+            let matchedVariable = allVariables.find(variable => variable.name === style.name);
+
+
+            // Если таковая не найдена, ищем переменную с разделителем.
+            if (!matchedVariable) {
+                matchedVariable = allVariables.find(variable => {
+                    let variableNameParts = variable.name.split('/');
+                    let variableSimpleName = variableNameParts[variableNameParts.length - 1];
+                    return variableSimpleName === style.name;
+                });
+            }
 
             let options = allVariables
                 .map(variable => {
@@ -152,6 +160,7 @@
 
             return `<select class="variable-select" data-nodeid="${style.id}" data-styletype="${style.type}">${options}</select>`;
         }
+
 
 
 
@@ -182,5 +191,6 @@
         );
       }
     </script>
+    
   </body>
 </html>
